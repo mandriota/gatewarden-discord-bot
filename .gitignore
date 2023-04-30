@@ -22,3 +22,5 @@ bot
 go.work
 
 /configs
+
+.DS_Store
