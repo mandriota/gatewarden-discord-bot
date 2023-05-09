@@ -9,22 +9,10 @@ import (
 	"github.com/disgoorg/log"
 	"github.com/disgoorg/snowflake/v2"
 	"github.com/mandriota/gatewarden-bot/pkg/bytes"
-	"github.com/redis/go-redis/v9"
 	"github.com/steambap/captcha"
 )
 
-var (
-	client *redis.Client
-	cDatas sync.Map
-)
-
-func init() {
-	client = redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1:6379",
-		Password: "",
-		DB:       0,
-	})
-}
+var cDatas sync.Map
 
 func commandListener(acic *events.ApplicationCommandInteractionCreate) {
 	switch cname := acic.SlashCommandInteractionData().CommandName(); cname {

@@ -10,14 +10,28 @@ import (
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/log"
+	"github.com/redis/go-redis/v9"
 )
 
 var config = struct {
 	Token string `json:"token"`
+	Redis struct {
+		Addr     string `json:"address"`
+		Password string `json:"password"`
+		DB       int    `json:"db"`
+	} `json:"redis"`
 }{}
+
+var client *redis.Client
 
 func init() {
 	json.NewDecoder(os.Stdin).Decode(&config)
+
+	client = redis.NewClient(&redis.Options{
+		Addr:     config.Redis.Addr,
+		Password: config.Redis.Password,
+		DB:       config.Redis.DB,
+	})
 }
 
 var commandsCreate = []discord.ApplicationCommandCreate{
