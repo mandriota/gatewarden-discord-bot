@@ -13,8 +13,7 @@ import (
 )
 
 var config = struct {
-	Token            string            `json:"token"`
-	GuildsBypassRole map[string]string `json:"guildsBypassRole"`
+	Token string `json:"token"`
 }{}
 
 func init() {
@@ -34,6 +33,16 @@ var commandsCreate = []discord.ApplicationCommandCreate{
 				Name:        "answer",
 				Description: "answer to captcha",
 				Required:    true,
+			},
+		},
+	},
+	discord.SlashCommandCreate{
+		Name:        "config",
+		Description: "configure",
+		Options: []discord.ApplicationCommandOption{
+			discord.ApplicationCommandOptionRole{
+				Name:        "bypass",
+				Description: "bypass role",
 			},
 		},
 	},

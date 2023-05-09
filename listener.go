@@ -1,31 +1,29 @@
 package main
 
 import (
-	"bytes"
-	"runtime"
+	"context"
 	"sync"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/log"
 	"github.com/disgoorg/snowflake/v2"
+	"github.com/mandriota/gatewarden-bot/pkg/bytes"
+	"github.com/redis/go-redis/v9"
 	"github.com/steambap/captcha"
 )
 
 var (
-	cDatas = sync.Map{}
-	cBuffs = sync.Pool{
-		New: func() any {
-			return &bytes.Buffer{}
-		},
-	}
+	client *redis.Client
+	cDatas sync.Map
 )
 
-func getBuffer() *bytes.Buffer {
-	buf := cBuffs.Get().(*bytes.Buffer)
-	runtime.SetFinalizer(buf, cBuffs.Put)
-	buf.Reset()
-	return buf
+func init() {
+	client = redis.NewClient(&redis.Options{
+		Addr:     "127.0.0.1:6379",
+		Password: "",
+		DB:       0,
+	})
 }
 
 func commandListener(acic *events.ApplicationCommandInteractionCreate) {
@@ -34,16 +32,17 @@ func commandListener(acic *events.ApplicationCommandInteractionCreate) {
 		captchaCommandListener(acic)
 	case "submit":
 		submitCommandListener(acic)
+	case "config":
+		configCommandListener(acic)
 	default:
 		log.Error("unknow command: ", cname)
 	}
 }
 
 func captchaCommandListener(acic *events.ApplicationCommandInteractionCreate) {
-	data, err := captcha.New(320, 128, func(o *captcha.Options) {
+	data, err := captcha.New(300, 100, func(o *captcha.Options) {
 		o.TextLength = 5
 		o.CurveNumber = 7
-		o.Noise = 3
 	})
 	if err != nil {
 		log.Error("error while generating captcha: ", err)
@@ -51,8 +50,10 @@ func captchaCommandListener(acic *events.ApplicationCommandInteractionCreate) {
 
 	cDatas.Store([2]uint16{acic.GuildID().Sequence(), acic.User().ID.Sequence()}, data.Text)
 
-	buf := getBuffer()
-	data.WriteJPG(buf, nil)
+	buf := bytes.AcquireBuffer65536()
+	if err := data.WriteJPG(buf, nil); err != nil {
+		log.Error("error while writing jpeg: ", err)
+	}
 
 	if err := acic.CreateMessage(discord.NewMessageCreateBuilder().
 		SetContent(":drop_of_blood: Use /submit command to submit answer").
@@ -75,7 +76,7 @@ func submitCommandListener(acic *events.ApplicationCommandInteractionCreate) {
 	if ansv, _ := acic.SlashCommandInteractionData().OptString("answer"); ans.(string) == ansv {
 		acic.Client().Rest().AddMemberRole(*acic.GuildID(),
 			acic.User().ID,
-			snowflake.MustParse(config.GuildsBypassRole[acic.GuildID().String()]),
+			snowflake.MustParse(client.HGet(context.TODO(), "guildsBypassRole", acic.GuildID().String()).Val()),
 		)
 		acic.CreateMessage(discord.NewMessageCreateBuilder().
 			SetContent(":o: You are verified.").
@@ -84,6 +85,16 @@ func submitCommandListener(acic *events.ApplicationCommandInteractionCreate) {
 	} else {
 		acic.CreateMessage(discord.NewMessageCreateBuilder().
 			SetContent(":x: Wrong answer, please use /captcha command again.").
+			Build(),
+		)
+	}
+}
+
+func configCommandListener(acic *events.ApplicationCommandInteractionCreate) {
+	if role, ok := acic.SlashCommandInteractionData().OptRole("bypass"); ok {
+		client.HSetNX(context.TODO(), "guildsBypassRole", acic.GuildID().String(), role.ID.String())
+		acic.CreateMessage(discord.NewMessageCreateBuilder().
+			SetContent(":gear: Configuration is updated.").
 			Build(),
 		)
 	}
