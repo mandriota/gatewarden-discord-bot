@@ -111,7 +111,7 @@ func configCommandListener(acic *events.ApplicationCommandInteractionCreate) err
 	}
 
 	if role, ok := acic.SlashCommandInteractionData().OptRole("bypass"); ok {
-		client.HSetNX(context.TODO(), "guildsBypassRole", acic.GuildID().String(), role.ID.String())
+		client.HSet(context.TODO(), "guildsBypassRole", acic.GuildID().String(), role.ID.String())
 		return acic.CreateMessage(discord.NewMessageCreateBuilder().
 			SetContent(":gear: Configuration is updated.").
 			Build(),
