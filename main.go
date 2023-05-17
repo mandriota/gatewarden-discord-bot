@@ -58,6 +58,10 @@ var commandsCreate = []discord.ApplicationCommandCreate{
 				Name:        "bypass",
 				Description: "bypass role",
 			},
+			discord.ApplicationCommandOptionBool{
+				Name:        "ephemeral",
+				Description: "bot message invisibility to each other",
+			},
 		},
 	},
 }
@@ -69,7 +73,7 @@ func main() {
 
 	client, err := disgo.New(config.Token,
 		bot.WithDefaultGateway(),
-		bot.WithEventListenerFunc(commandListener),
+		bot.WithEventListenerFunc(newCommandListener(ctx)),
 	)
 	if err != nil {
 		log.Fatal("error while building disgo instance: ", err)
