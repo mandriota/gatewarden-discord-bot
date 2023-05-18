@@ -7,6 +7,11 @@ import (
 	"github.com/disgoorg/disgo/discord"
 )
 
+type command[T any] struct {
+	Description map[discord.Locale]string `json:"description"`
+	Options     T                         `json:"options"`
+}
+
 type Config struct {
 	Token string `json:"token"`
 	Redis struct {
@@ -16,22 +21,14 @@ type Config struct {
 	} `json:"redis"`
 	Localization struct {
 		Commands struct {
-			Config struct {
-				Description map[discord.Locale]string `json:"description"`
-				Options     struct {
-					Bypass    map[discord.Locale]string `json:"bypass"`
-					Ephemeral map[discord.Locale]string `json:"ephemeral"`
-				} `json:"options"`
-			} `json:"config"`
-			Captcha struct {
-				Description map[discord.Locale]string `json:"description"`
-			} `json:"captcha"`
-			Submit struct {
-				Description map[discord.Locale]string `json:"description"`
-				Options     struct {
-					Answer map[discord.Locale]string `json:"answer"`
-				} `json:"options"`
-			} `json:"submit"`
+			Config command[struct {
+				Bypass    map[discord.Locale]string `json:"bypass"`
+				Ephemeral map[discord.Locale]string `json:"ephemeral"`
+			}] `json:"config"`
+			Captcha command[struct{}]
+			Submit  command[struct {
+				Answer map[discord.Locale]string `json:"answer"`
+			}]
 		} `json:"commands"`
 		Messages struct {
 			PermissionsMissed     map[discord.Locale]string `json:"permissions-missed"`
