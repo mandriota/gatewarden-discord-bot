@@ -25,10 +25,10 @@ type Config struct {
 				Bypass    map[discord.Locale]string `json:"bypass"`
 				Ephemeral map[discord.Locale]string `json:"ephemeral"`
 			}] `json:"config"`
-			Captcha command[struct{}]
+			Captcha command[struct{}] `json:"captcha"`
 			Submit  command[struct {
 				Answer map[discord.Locale]string `json:"answer"`
-			}]
+			}] `json:"submit"`
 		} `json:"commands"`
 		Messages struct {
 			PermissionsMissed     map[discord.Locale]string `json:"permissions-missed"`
