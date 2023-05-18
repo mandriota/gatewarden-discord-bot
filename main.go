@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"os/signal"
 
@@ -10,60 +9,48 @@ import (
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/log"
-	"github.com/redis/go-redis/v9"
+	"github.com/mandriota/gatewarden-bot/pkg/config"
+	"github.com/mandriota/gatewarden-bot/pkg/listener"
 )
 
-var config = struct {
-	Token string `json:"token"`
-	Redis struct {
-		Addr     string `json:"address"`
-		Password string `json:"password"`
-		DB       int    `json:"db"`
-	} `json:"redis"`
-}{}
-
-var client *redis.Client
-
-func init() {
-	json.NewDecoder(os.Stdin).Decode(&config)
-
-	client = redis.NewClient(&redis.Options{
-		Addr:     config.Redis.Addr,
-		Password: config.Redis.Password,
-		DB:       config.Redis.DB,
-	})
-}
-
-var commandsCreate = []discord.ApplicationCommandCreate{
-	discord.SlashCommandCreate{
-		Name:        "captcha",
-		Description: "generates new captcha",
-	},
-	discord.SlashCommandCreate{
-		Name:        "submit",
-		Description: "submit answer to captcha",
-		Options: []discord.ApplicationCommandOption{
-			discord.ApplicationCommandOptionString{
-				Name:        "answer",
-				Description: "answer to captcha",
-				Required:    true,
+func newCommandCreate(cfg *config.Config) []discord.ApplicationCommandCreate {
+	return []discord.ApplicationCommandCreate{
+		discord.SlashCommandCreate{
+			Name:        "config",
+			Description: "configure bot",
+			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionRole{
+					Name:                     "bypass",
+					Description:              "set bypass role",
+					DescriptionLocalizations: cfg.Localizations.Config.Options.Bypass,
+				},
+				discord.ApplicationCommandOptionBool{
+					Name:                     "ephemeral",
+					Description:              "set bot messages invisibility to each other",
+					DescriptionLocalizations: cfg.Localizations.Config.Options.Ephemeral,
+				},
 			},
+			DescriptionLocalizations: cfg.Localizations.Config.Description,
 		},
-	},
-	discord.SlashCommandCreate{
-		Name:        "config",
-		Description: "configure",
-		Options: []discord.ApplicationCommandOption{
-			discord.ApplicationCommandOptionRole{
-				Name:        "bypass",
-				Description: "bypass role",
-			},
-			discord.ApplicationCommandOptionBool{
-				Name:        "ephemeral",
-				Description: "bot message invisibility to each other",
-			},
+		discord.SlashCommandCreate{
+			Name:                     "captcha",
+			Description:              "generates new captcha",
+			DescriptionLocalizations: cfg.Localizations.Captcha.Description,
 		},
-	},
+		discord.SlashCommandCreate{
+			Name:        "submit",
+			Description: "submit answer to captcha",
+			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionString{
+					Name:                     "answer",
+					Description:              "captcha solution",
+					Required:                 true,
+					DescriptionLocalizations: cfg.Localizations.Submit.Options.Answer,
+				},
+			},
+			DescriptionLocalizations: cfg.Localizations.Submit.Description,
+		},
+	}
 }
 
 func main() {
@@ -71,16 +58,18 @@ func main() {
 
 	ctx := context.Background()
 
-	client, err := disgo.New(config.Token,
+	cfg := config.FromStdin(&config.Config{})
+
+	client, err := disgo.New(cfg.Token,
 		bot.WithDefaultGateway(),
-		bot.WithEventListenerFunc(newCommandListener(ctx)),
+		bot.WithEventListenerFunc(listener.New(ctx, cfg)),
 	)
 	if err != nil {
 		log.Fatal("error while building disgo instance: ", err)
 	}
 	defer client.Close(ctx)
 
-	if _, err := client.Rest().SetGlobalCommands(client.ApplicationID(), commandsCreate); err != nil {
+	if _, err := client.Rest().SetGlobalCommands(client.ApplicationID(), newCommandCreate(cfg)); err != nil {
 		log.Fatal("error while registering commands: ", err)
 	}
 

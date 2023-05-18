@@ -21,7 +21,7 @@ bot
 # Go workspace file
 go.work
 
-/configs
+config.json
 
 .DS_Store
 .DS_Store
