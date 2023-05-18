@@ -39,7 +39,7 @@ func newCommandCreate(cfg *config.Config) []discord.ApplicationCommandCreate {
 		},
 		discord.SlashCommandCreate{
 			Name:        "submit",
-			Description: "submit answer to captcha",
+			Description: "submit captcha solution",
 			Options: []discord.ApplicationCommandOption{
 				discord.ApplicationCommandOptionString{
 					Name:                     "answer",
