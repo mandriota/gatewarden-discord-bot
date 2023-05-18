@@ -22,20 +22,20 @@ func newCommandCreate(cfg *config.Config) []discord.ApplicationCommandCreate {
 				discord.ApplicationCommandOptionRole{
 					Name:                     "bypass",
 					Description:              "set bypass role",
-					DescriptionLocalizations: cfg.Localizations.Config.Options.Bypass,
+					DescriptionLocalizations: cfg.Localization.Commands.Config.Options.Bypass,
 				},
 				discord.ApplicationCommandOptionBool{
 					Name:                     "ephemeral",
-					Description:              "set bot messages invisibility to each other",
-					DescriptionLocalizations: cfg.Localizations.Config.Options.Ephemeral,
+					Description:              "set bot messages to be ephemeral",
+					DescriptionLocalizations: cfg.Localization.Commands.Config.Options.Ephemeral,
 				},
 			},
-			DescriptionLocalizations: cfg.Localizations.Config.Description,
+			DescriptionLocalizations: cfg.Localization.Commands.Config.Description,
 		},
 		discord.SlashCommandCreate{
 			Name:                     "captcha",
 			Description:              "generates new captcha",
-			DescriptionLocalizations: cfg.Localizations.Captcha.Description,
+			DescriptionLocalizations: cfg.Localization.Commands.Captcha.Description,
 		},
 		discord.SlashCommandCreate{
 			Name:        "submit",
@@ -45,10 +45,10 @@ func newCommandCreate(cfg *config.Config) []discord.ApplicationCommandCreate {
 					Name:                     "answer",
 					Description:              "captcha solution",
 					Required:                 true,
-					DescriptionLocalizations: cfg.Localizations.Submit.Options.Answer,
+					DescriptionLocalizations: cfg.Localization.Commands.Submit.Options.Answer,
 				},
 			},
-			DescriptionLocalizations: cfg.Localizations.Submit.Description,
+			DescriptionLocalizations: cfg.Localization.Commands.Submit.Description,
 		},
 	}
 }

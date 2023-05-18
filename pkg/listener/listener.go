@@ -29,11 +29,11 @@ func New(ctx context.Context, cfg *config.Config) func(acic *events.ApplicationC
 
 		switch cname := acic.SlashCommandInteractionData().CommandName(); cname {
 		case "captcha":
-			err = l.captchaCommandListener(ctx, acic)
+			err = l.captchaCommandListener(ctx, cfg, acic)
 		case "submit":
-			err = l.submitCommandListener(ctx, acic)
+			err = l.submitCommandListener(ctx, cfg, acic)
 		case "config":
-			err = l.configCommandListener(ctx, acic)
+			err = l.configCommandListener(ctx, cfg, acic)
 		default:
 			err = fmt.Errorf("unknow command: %v", cname)
 		}
@@ -50,10 +50,10 @@ type Listener struct {
 	captchas sync.Map
 }
 
-func (l *Listener) configCommandListener(ctx context.Context, acic *events.ApplicationCommandInteractionCreate) error {
+func (l *Listener) configCommandListener(ctx context.Context, cfg *config.Config, acic *events.ApplicationCommandInteractionCreate) error {
 	if acic.Member().Permissions.Remove(discord.PermissionManageRoles, discord.PermissionAdministrator) == acic.Member().Permissions {
 		return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-			SetContent(":anger: You do not have anyone of these permissions: **Manage Roles**, **Administrator**.").
+			SetContent(cfg.Localization.Messages.PermissionsMissed[acic.Locale()]).
 			Build(),
 		)
 	}
@@ -67,12 +67,12 @@ func (l *Listener) configCommandListener(ctx context.Context, acic *events.Appli
 	}
 
 	return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-		SetContent(":gear: Configuration is updated.").
+		SetContent(cfg.Localization.Messages.ConfigurationUpdated[acic.Locale()]).
 		Build(),
 	)
 }
 
-func (l *Listener) captchaCommandListener(ctx context.Context, acic *events.ApplicationCommandInteractionCreate) error {
+func (l *Listener) captchaCommandListener(ctx context.Context, cfg *config.Config, acic *events.ApplicationCommandInteractionCreate) error {
 	data, err := captcha.New(300, 100, func(o *captcha.Options) {
 		o.TextLength = 5
 		o.CurveNumber = 7
@@ -89,24 +89,24 @@ func (l *Listener) captchaCommandListener(ctx context.Context, acic *events.Appl
 	}
 
 	return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-		SetContent(":drop_of_blood: Use /submit command to submit answer").
+		SetContent(cfg.Localization.Messages.SubmissionRequired[acic.Locale()]).
 		SetFiles(discord.NewFile("captcha.jpg", "captcha", buf, discord.FileFlagsNone)).
 		Build(),
 	)
 }
 
-func (l *Listener) submitCommandListener(ctx context.Context, acic *events.ApplicationCommandInteractionCreate) error {
+func (l *Listener) submitCommandListener(ctx context.Context, cfg *config.Config, acic *events.ApplicationCommandInteractionCreate) error {
 	ans, ok := l.captchas.LoadAndDelete([2]uint16{acic.GuildID().Sequence(), acic.User().ID.Sequence()})
 	if !ok {
 		return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-			SetContent(":anger: Use /captcha command first").
+			SetContent(cfg.Localization.Messages.CaptchaRequired[acic.Locale()]).
 			Build(),
 		)
 	}
 
 	if ansv, _ := acic.SlashCommandInteractionData().OptString("answer"); ans.(string) != ansv {
 		return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-			SetContent(":x: Wrong answer, please use /captcha command again.").
+			SetContent(cfg.Localization.Messages.VerificationFailed[acic.Locale()]).
 			Build(),
 		)
 	}
@@ -114,7 +114,7 @@ func (l *Listener) submitCommandListener(ctx context.Context, acic *events.Appli
 	id := l.client.HGet(ctx, "guildsBypassRole", acic.GuildID().String()).Val()
 	if id == "" {
 		return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-			SetContent(":anger: bypass role is not configured: use /config command first.").
+			SetContent(cfg.Localization.Messages.BypassMissed[acic.Locale()]).
 			Build(),
 		)
 	}
@@ -131,7 +131,7 @@ func (l *Listener) submitCommandListener(ctx context.Context, acic *events.Appli
 		return fmt.Errorf("error while giving role: %v", err)
 	}
 	return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-		SetContent(":o: You are verified.").
+		SetContent(cfg.Localization.Messages.VerificationSuccessed[acic.Locale()]).
 		Build(),
 	)
 }
