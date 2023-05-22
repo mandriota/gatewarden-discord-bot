@@ -1,19 +1,16 @@
 package listener
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
 	"strings"
 	"time"
-	"unsafe"
 
-	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/log"
 	"github.com/disgoorg/snowflake/v2"
-	"github.com/mandriota/base64Captcha"
+	captcha "github.com/mandriota/base64Captcha"
 	"github.com/mandriota/gatewarden-bot/pkg/config"
 	"github.com/redis/go-redis/v9"
 )
@@ -21,21 +18,21 @@ import (
 func New(ctx context.Context, cfg *config.Config) func(acic *events.ApplicationCommandInteractionCreate) {
 	l := Listener{
 		config: cfg,
-		client: redis.NewClient(&redis.Options{
+		dbClient: redis.NewClient(&redis.Options{
 			Addr:     cfg.Redis.Addr,
 			Password: cfg.Redis.Password,
 			DB:       cfg.Redis.DB,
 		}),
-		driver: base64Captcha.NewDriverString(
+		driver: captcha.NewDriverString(
 			200, 600, 10,
-			base64Captcha.OptionShowHollowLine|
-				base64Captcha.OptionShowSineLine|
-				base64Captcha.OptionShowSlimeLine,
-			5, base64Captcha.TxtAlphabet, nil,
-			base64Captcha.DefaultEmbeddedFonts,
+			captcha.OptionShowHollowLine|
+				captcha.OptionShowSineLine|
+				captcha.OptionShowSlimeLine,
+			5, captcha.TxtAlphabet, nil,
+			captcha.DefaultEmbeddedFonts,
 			[]string{"Comismsh.ttf"},
 		),
-		memStore: base64Captcha.NewMemoryStore(1000, time.Minute),
+		memStore: captcha.NewMemoryStore(1000, time.Minute),
 	}
 
 	return func(acic *events.ApplicationCommandInteractionCreate) {
@@ -59,80 +56,52 @@ func New(ctx context.Context, cfg *config.Config) func(acic *events.ApplicationC
 }
 
 type Listener struct {
-	config *config.Config
-	client *redis.Client
+	config   *config.Config
+	dbClient *redis.Client
 
-	driver   base64Captcha.Driver
-	memStore base64Captcha.Store
+	driver   captcha.Driver
+	memStore captcha.Store
 }
 
 func (l *Listener) commandConfigListener(ctx context.Context, acic *events.ApplicationCommandInteractionCreate) error {
 	if role, ok := acic.SlashCommandInteractionData().OptRole("bypass"); ok {
-		l.client.HSet(ctx, "guildsBypassRole", acic.GuildID().String(), role.ID.String())
+		l.dbClient.HSet(ctx, "guildsBypassRole", acic.GuildID().String(), role.ID.String())
 	}
 
 	if v, ok := acic.SlashCommandInteractionData().OptBool("ephemeral"); ok {
-		l.client.HSet(ctx, "guildsEphemerals", acic.GuildID().String(), v)
+		l.dbClient.HSet(ctx, "guildsEphemerals", acic.GuildID().String(), v)
 	}
 
-	return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-		SetEmbeds(l.newDefaultEmbedBuilder(ctx, acic).
-			SetTitle(l.config.Localization.Messages.Reconfigured[acic.Locale()]).
-			Build()).
-		Build(),
-	)
+	return l.reconfiguredCreateMessage(ctx, acic)
 }
 
 func (l *Listener) commandCaptchaListener(ctx context.Context, acic *events.ApplicationCommandInteractionCreate) error {
 	_, query, answer := l.driver.GenerateIdQuestionAnswer()
-	i, _ := l.driver.DrawCaptcha(query)
-	l.memStore.Set(generateCaptchaID(acic), strings.ToLower(answer))
+	capt, err := l.driver.DrawCaptcha(query)
+	if err != nil {
+		return fmt.Errorf("error while drawing captcha: %v", err)
+	}
+	if err := l.memStore.Set(generateCaptchaID(acic), strings.ToLower(answer)); err != nil {
+		return fmt.Errorf("error while storing captcha: %v", err)
+	}
 
-	return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-		SetFiles(discord.NewFile(
-			"captcha.jpg",
-			"captcha",
-			bytes.NewReader(i.EncodeBinary()),
-			discord.FileFlagsNone,
-		)).
-		SetEmbeds(l.newDefaultEmbedBuilder(ctx, acic).
-			SetImage("attachment://captcha.jpg").
-			SetFooterText(l.config.Localization.Messages.SubmissionRequired[acic.Locale()]).
-			Build()).
-		Build(),
-	)
+	return l.generateCaptchaCreateMessage(ctx, acic, capt.EncodeBinary())
 }
 
 func (l *Listener) commandSubmitListener(ctx context.Context, acic *events.ApplicationCommandInteractionCreate) error {
 	if l.memStore.Get(generateCaptchaID(acic), false) == "" {
-		return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-			SetEmbeds(l.newDefaultEmbedBuilder(ctx, acic).
-				SetTitle(l.config.Localization.Messages.CaptchaRequired[acic.Locale()]).
-				Build()).
-			Build(),
-		)
+		return l.captchaRequiredCreateMessage(ctx, acic)
 	}
 
-	ansv, _ := acic.SlashCommandInteractionData().OptString("answer")
+	answer, _ := acic.SlashCommandInteractionData().OptString("answer")
 
-	if !l.memStore.Verify(generateCaptchaID(acic), strings.ToLower(ansv), true) {
-		return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-			SetEmbeds(l.newDefaultEmbedBuilder(ctx, acic).
-				SetTitle(l.config.Localization.Messages.BypassDenied[acic.Locale()]).
-				Build()).
-			Build(),
-		)
+	if !l.memStore.Verify(generateCaptchaID(acic), strings.ToLower(answer), true) {
+		return l.bypassDeniedCreateMessage(ctx, acic)
 	}
 
-	id := l.client.HGet(ctx, "guildsBypassRole", acic.GuildID().String()).Val()
+	id := l.dbClient.HGet(ctx, "guildsBypassRole", acic.GuildID().String()).Val()
 	if id == "" {
-		log.Info("bypass role required")
-		return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-			SetEmbeds(l.newDefaultEmbedBuilder(ctx, acic).
-				SetTitle(l.config.Localization.Messages.BypassRoleRequired[acic.Locale()]).
-				Build()).
-			Build(),
-		)
+		return l.bypassRoleRequiredCreateMessage(ctx, acic)
 	}
 
 	sfid, err := snowflake.Parse(id)
@@ -146,29 +115,5 @@ func (l *Listener) commandSubmitListener(ctx context.Context, acic *events.Appli
 	); err != nil {
 		return fmt.Errorf("error while giving role: %v", err)
 	}
-	return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
-		SetEmbeds(l.newDefaultEmbedBuilder(ctx, acic).
-			SetTitle(l.config.Localization.Messages.Bypassed[acic.Locale()]).
-			Build()).
-		Build(),
-	)
-}
-
-func (l *Listener) newDefaultMessageCreateBuilder(ctx context.Context, acic *events.ApplicationCommandInteractionCreate) *discord.MessageCreateBuilder {
-	v, _ := l.client.HGet(ctx, "guildsEphemerals", acic.GuildID().String()).Bool()
-
-	return discord.NewMessageCreateBuilder().
-		SetEphemeral(v)
-}
-
-func (l *Listener) newDefaultEmbedBuilder(ctx context.Context, acic *events.ApplicationCommandInteractionCreate) *discord.EmbedBuilder {
-	return discord.NewEmbedBuilder().
-		SetColor(0xFF0000)
-}
-
-func generateCaptchaID(acic *events.ApplicationCommandInteractionCreate) string {
-	return unsafe.String((*byte)(unsafe.Pointer(&[2]uint16{
-		acic.GuildID().Sequence(),
-		acic.User().ID.Sequence(),
-	})), 4)
+	return l.bypassedCreateMessage(ctx, acic)
 }

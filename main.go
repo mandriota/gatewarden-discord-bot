@@ -25,16 +25,16 @@ func newCommandCreate(cfg *config.Config) []discord.ApplicationCommandCreate {
 					Description: "set captcha driver",
 					Choices: []discord.ApplicationCommandOptionChoiceString{
 						{
-							Name:  "Alphabetical",
-							Value: "alpha",
+							Name:  "Alphanumerical",
+							Value: "alphanumerical",
 						},
 						{
 							Name:  "Numerical",
 							Value: "numerical",
 						},
 						{
-							Name:  "Alphanumerical",
-							Value: "alphanumerical",
+							Name:  "Math Expression",
+							Value: "expression",
 						},
 					},
 				},
