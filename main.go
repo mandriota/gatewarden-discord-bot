@@ -8,6 +8,7 @@ import (
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/json"
 	"github.com/disgoorg/log"
 	"github.com/mandriota/gatewarden-bot/pkg/config"
 	"github.com/mandriota/gatewarden-bot/pkg/listener"
@@ -19,6 +20,24 @@ func newCommandCreate(cfg *config.Config) []discord.ApplicationCommandCreate {
 			Name:        "config",
 			Description: "configure bot",
 			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionString{
+					Name:        "driver",
+					Description: "set captcha driver",
+					Choices: []discord.ApplicationCommandOptionChoiceString{
+						{
+							Name:  "Alphabetical",
+							Value: "alpha",
+						},
+						{
+							Name:  "Numerical",
+							Value: "numerical",
+						},
+						{
+							Name:  "Alphanumerical",
+							Value: "alphanumerical",
+						},
+					},
+				},
 				discord.ApplicationCommandOptionRole{
 					Name:                     "bypass",
 					Description:              "set bypass role",
@@ -31,6 +50,7 @@ func newCommandCreate(cfg *config.Config) []discord.ApplicationCommandCreate {
 				},
 			},
 			DescriptionLocalizations: cfg.Localization.Commands.Config.Description,
+			DefaultMemberPermissions: json.NewNullablePtr(discord.PermissionAdministrator),
 		},
 		discord.SlashCommandCreate{
 			Name:                     "captcha",

@@ -7,39 +7,38 @@ import (
 	"github.com/disgoorg/disgo/discord"
 )
 
-type command[T any] struct {
-	Description map[discord.Locale]string `json:"description"`
-	Options     T                         `json:"options"`
+type command[Options any] struct {
+	Description map[discord.Locale]string
+	Options     Options
 }
 
 type Config struct {
-	Token string `json:"token"`
+	Token string
 	Redis struct {
-		Addr     string `json:"address"`
-		Password string `json:"password"`
-		DB       int    `json:"db"`
-	} `json:"redis"`
+		Addr     string
+		Password string
+		DB       int
+	}
 	Localization struct {
 		Commands struct {
 			Config command[struct {
-				Bypass    map[discord.Locale]string `json:"bypass"`
-				Ephemeral map[discord.Locale]string `json:"ephemeral"`
-			}] `json:"config"`
-			Captcha command[struct{}] `json:"captcha"`
+				Bypass    map[discord.Locale]string
+				Ephemeral map[discord.Locale]string
+			}]
+			Captcha command[struct{}]
 			Submit  command[struct {
-				Answer map[discord.Locale]string `json:"answer"`
-			}] `json:"submit"`
-		} `json:"commands"`
-		Messages struct {
-			PermissionsMissed     map[discord.Locale]string `json:"permissions-missed"`
-			SubmissionRequired    map[discord.Locale]string `json:"submission-required"`
-			ConfigurationUpdated  map[discord.Locale]string `json:"configuration-updated"`
-			CaptchaRequired       map[discord.Locale]string `json:"captcha-required"`
-			VerificationFailed    map[discord.Locale]string `json:"verification-failed"`
-			BypassMissed          map[discord.Locale]string `json:"bypass-missed"`
-			VerificationSuccessed map[discord.Locale]string `json:"verification-successed"`
+				Answer map[discord.Locale]string
+			}]
 		}
-	} `json:"localization"`
+		Messages struct {
+			BypassRoleRequired map[discord.Locale]string
+			SubmissionRequired map[discord.Locale]string
+			CaptchaRequired    map[discord.Locale]string
+			Reconfigured       map[discord.Locale]string
+			BypassDenied       map[discord.Locale]string
+			Bypassed           map[discord.Locale]string
+		}
+	}
 }
 
 func FromStdin(cfg *Config) *Config {
