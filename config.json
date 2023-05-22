@@ -217,40 +217,7 @@
             }
         },
         "messages": {
-            "permissions-missed": {
-                "en-US": ":anger: You do not have anyone of these permissions: **Manage Roles**, **Administrator**.",
-                "en-GB": ":anger: You do not have anyone of these permissions: **Manage Roles**, **Administrator**.",
-                "bg": ":anger: Нямате нито едно от следните права: **Управление на роли**, **Администратор**.",
-                "zh-CN": ":anger: 您没有这些权限之一：**管理角色**，**管理员**。",
-                "zh-TW": ":anger: 您沒有這些權限之一：**管理角色**，**管理員**。",
-                "hr": ":anger: Nemate nijednu od ovih dozvola: **Upravljanje ulogama**, **Administrator**.",
-                "cs": ":anger: Nemáte žádná z těchto oprávnění: **Správa rolí**, **Administrátor**.",
-                "da": ":anger: Du har ikke nogen af disse tilladelser: **Administrer roller**, **Administrator**.",
-                "nl": ":anger: U heeft geen van deze machtigingen: **Rollen beheren**, **Beheerder**.",
-                "fi": ":anger: Sinulla ei ole näitä oikeuksia: **Hallitse rooleja**, **Ylläpitäjä**.",
-                "fr": ":anger: Vous ne disposez d'aucune de ces autorisations : **Gérer les rôles**, **Administrateur**.",
-                "de": ":anger: Sie haben keine dieser Berechtigungen: **Rollen verwalten**, **Administrator**.",
-                "el": ":anger: Δεν έχετε καμία από αυτές τις άδειες: **Διαχείριση ρόλων**, **Διαχειριστής**.",
-                "hi": ":anger: आपके पास इनमें से कोई भी अनुमति नहीं है: **रोल प्रबंधन**, **प्रशासक**.",
-                "hu": ":anger: Nincs egyik sem ezek közül a jogosultságok közül: **Szerepek kezelése**, **Rendszergazda**.",
-                "id": ":anger: Anda tidak memiliki salah satu dari izin-izin ini: **Kelola Peran**, **Administrator**.",
-                "it": ":anger: Non hai nessuna di queste autorizzazioni: **Gestisci ruoli**, **Amministratore**.",
-                "ja": ":anger: これらの権限のいずれかを持っていません：**役職の管理**、**管理者**。",
-                "ko": ":anger: 이 권한 중 하나도 가지고 있지 않습니다: **역할 관리**, **관리자**.",
-                "lt": ":anger: Jūs neturite jokių iš šių leidimų: **Tvarkyti vaidmenis**, **Administratorius**.",
-                "no": ":anger: Du har ingen av disse tillatelsene: **Administrer roller**, **Administrator**.",
-                "pl": ":anger: Nie masz żadnego z tych uprawnień: **Zarządzaj rolami**, **Administrator**.",
-                "pt-BR": ":anger: Você não tem nenhuma dessas permissões: **Gerenciar Cargos**, **Administrador**.",
-                "ro": ":anger: Nu aveți niciuna dintre aceste permisiuni: **Administrare roluri**, **Administrator**.",
-                "ru": ":anger: У вас нет ни одного из этих разрешений: **Управление ролями**, **Администратор**.",
-                "es-ES": ":anger: No tienes ninguno de estos permisos: **Gestionar roles**, **Administrador**.",
-                "sv-SE": ":anger: Du har inte någon av dessa behörigheter: **Hantera roller**, **Administratör**.",
-                "th": ":anger: คุณไม่มีสิทธิ์ใด ๆ ในนี้: **จัดการบทบาท**, **ผู้ดูแลระบบ**.",
-                "tr": ":anger: Bu izinlerden hiçbirine sahip değilsiniz: **Rolleri Yönet**, **Yönetici**.",
-                "uk": ":anger: В у вас немає жодного з цих дозволів: **Керувати ролями**, **Адміністратор**.",
-                "vi": ":anger: Bạn không có bất kỳ quyền nào trong những quyền này: **Quản lý vai trò**, **Quản trị viên**."
-            },
-            "configuration-updated": {
+            "reconfigured": {
                 "en-US": ":gear: Configuration is updated.",
                 "en-GB": ":gear: Configuration is updated.",
                 "bg": ":gear: Конфигурацията е актуализирана.",
@@ -283,7 +250,7 @@
                 "uk": ":gear: Конфігурацію оновлено.",
                 "vi": ":gear: Cấu hình đã được cập nhật."
             },
-            "submission-required": {
+            "submissionRequired": {
                 "en-US": ":drop_of_blood: Use /submit command to submit answer.",
                 "en-GB": ":drop_of_blood: Use /submit command to submit answer.",
                 "bg": ":drop_of_blood: Използвайте командата /submit, за да изпратите отговор.",
@@ -316,7 +283,7 @@
                 "uk": ":drop_of_blood: Використовуйте команду /submit, щоб надіслати відповідь.",
                 "vi": ":drop_of_blood: Sử dụng lệnh /submit để gửi câu trả lời."
             },
-            "captcha-required": {
+            "captchaRequired": {
                 "en-US": ":anger: Use /captcha command first.",
                 "en-GB": ":anger: Use /captcha command first.",
                 "bg": ":anger: Използвайте първо командата /captcha.",
@@ -349,7 +316,7 @@
                 "uk": ":anger: Спочатку використовуйте команду /captcha.",
                 "vi": ":anger: Hãy sử dụng lệnh /captcha trước."
             },
-            "verification-failed": {
+            "bypassDenied": {
                 "en-US": ":x: Wrong answer, please use /captcha command again.",
                 "en-GB": ":x: Wrong answer, please use /captcha command again.",
                 "bg": ":x: Грешен отговор, моля използвайте отново командата /captcha.",
@@ -382,7 +349,7 @@
                 "uk": ":x: Неправильна відповідь, будь ласка, використовуйте команду /captcha знову.",
                 "vi": ":x: Câu trả lời sai, vui lòng sử dụng lệnh /captcha lại."
             },
-            "bypass-missed": {
+            "bypassRoleRequired": {
                 "en-US": ":anger: Bypass role is not configured. Please use the /config command first.",
                 "en-GB": ":anger: Bypass role is not configured. Please use the /config command first.",
                 "bg": ":anger: Ролята за пропуск не е конфигурирана. Моля, първо използвайте командата /config.",
@@ -415,7 +382,7 @@
                 "uk": ":anger: Роль обходу не налаштована. Будь ласка, спочатку використайте команду /config.",
                 "vi": ":anger: Vai trò bỏ qua chưa được cấu hình. Vui lòng sử dụng lệnh /config trước."
             },
-            "verification-successed": {
+            "bypassed": {
                 "en-US": ":o: You are verified.",
                 "en-GB": ":o: You are verified.",
                 "bg": ":o: Вие сте потвърдени.",

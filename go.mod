@@ -7,7 +7,7 @@ require (
 	github.com/disgoorg/json v1.0.0
 	github.com/disgoorg/log v1.2.0
 	github.com/disgoorg/snowflake/v2 v2.0.1
-	github.com/mojocn/base64Captcha v1.3.5
+	github.com/mandriota/base64Captcha v0.0.0-20230522102856-7cbd3d4d7c1d
 	github.com/redis/go-redis/v9 v9.0.3
 )
 

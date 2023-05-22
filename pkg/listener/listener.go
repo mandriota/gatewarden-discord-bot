@@ -13,8 +13,8 @@ import (
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/log"
 	"github.com/disgoorg/snowflake/v2"
+	"github.com/mandriota/base64Captcha"
 	"github.com/mandriota/gatewarden-bot/pkg/config"
-	"github.com/mojocn/base64Captcha"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -88,19 +88,11 @@ func (l *Listener) commandCaptchaListener(ctx context.Context, acic *events.Appl
 	i, _ := l.driver.DrawCaptcha(query)
 	l.memStore.Set(generateCaptchaID(acic), strings.ToLower(answer))
 
-	switch i := i.(type) {
-	case *base64Captcha.ItemChar:
-		i.BinaryEncoding()
-	case *base64Captcha.ItemDigit:
-		i.EncodeBinary()
-
-	}
-
 	return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
 		SetFiles(discord.NewFile(
 			"captcha.jpg",
 			"captcha",
-			bytes.NewReader(i.(*base64Captcha.ItemChar).BinaryEncoding()),
+			bytes.NewReader(i.EncodeBinary()),
 			discord.FileFlagsNone,
 		)).
 		SetEmbeds(l.newDefaultEmbedBuilder(ctx, acic).
@@ -134,6 +126,7 @@ func (l *Listener) commandSubmitListener(ctx context.Context, acic *events.Appli
 
 	id := l.client.HGet(ctx, "guildsBypassRole", acic.GuildID().String()).Val()
 	if id == "" {
+		log.Info("bypass role required")
 		return acic.CreateMessage(l.newDefaultMessageCreateBuilder(ctx, acic).
 			SetEmbeds(l.newDefaultEmbedBuilder(ctx, acic).
 				SetTitle(l.config.Localization.Messages.BypassRoleRequired[acic.Locale()]).
