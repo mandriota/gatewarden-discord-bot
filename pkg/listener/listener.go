@@ -113,7 +113,7 @@ func (l *Listener) commandSubmitListener(ctx context.Context, acic *events.Appli
 		acic.User().ID,
 		sfid,
 	); err != nil {
-		return fmt.Errorf("error while giving role: %v", err)
+		return l.manageRolesPermissionRequiredCreateMessage(ctx, acic)
 	}
 	return l.bypassedCreateMessage(ctx, acic)
 }

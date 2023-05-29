@@ -17,58 +17,59 @@ import (
 func newCommandCreate(cfg *config.Config) []discord.ApplicationCommandCreate {
 	return []discord.ApplicationCommandCreate{
 		discord.SlashCommandCreate{
-			Name:        "config",
-			Description: "configure bot",
+			Name:        cfg.Commands.Config.Name,
+			Description: cfg.Commands.Config.Description,
 			Options: []discord.ApplicationCommandOption{
-				discord.ApplicationCommandOptionString{
-					Name:        "driver",
-					Description: "set captcha driver",
-					Choices: []discord.ApplicationCommandOptionChoiceString{
-						{
-							Name:  "Alphanumerical",
-							Value: "alphanumerical",
+				/*
+					discord.ApplicationCommandOptionString{
+						Name:        "driver",
+						Description: "set captcha driver",
+						Choices: []discord.ApplicationCommandOptionChoiceString{
+							{
+								Name:  "Alphanumerical",
+								Value: "alphanumerical",
+							},
+							{
+								Name:  "Numerical",
+								Value: "numerical",
+							},
+							{
+								Name:  "Math Expression",
+								Value: "expression",
+							},
 						},
-						{
-							Name:  "Numerical",
-							Value: "numerical",
-						},
-						{
-							Name:  "Math Expression",
-							Value: "expression",
-						},
-					},
-				},
+					},*/
 				discord.ApplicationCommandOptionRole{
-					Name:                     "bypass",
-					Description:              "set bypass role",
-					DescriptionLocalizations: cfg.Localization.Commands.Config.Options.Bypass,
+					Name:                     cfg.Commands.Config.Options.Bypass.Name,
+					Description:              cfg.Commands.Config.Options.Bypass.Description,
+					DescriptionLocalizations: cfg.Commands.Config.Options.Bypass.DescriptionLocalizations,
 				},
 				discord.ApplicationCommandOptionBool{
-					Name:                     "ephemeral",
-					Description:              "set bot messages to be ephemeral",
-					DescriptionLocalizations: cfg.Localization.Commands.Config.Options.Ephemeral,
+					Name:                     cfg.Commands.Config.Options.Ephemeral.Name,
+					Description:              cfg.Commands.Config.Options.Ephemeral.Description,
+					DescriptionLocalizations: cfg.Commands.Config.Options.Ephemeral.DescriptionLocalizations,
 				},
 			},
-			DescriptionLocalizations: cfg.Localization.Commands.Config.Description,
+			DescriptionLocalizations: cfg.Commands.Config.DescriptionLocalizations,
 			DefaultMemberPermissions: json.NewNullablePtr(discord.PermissionAdministrator),
 		},
 		discord.SlashCommandCreate{
-			Name:                     "captcha",
-			Description:              "generates new captcha",
-			DescriptionLocalizations: cfg.Localization.Commands.Captcha.Description,
+			Name:                     cfg.Commands.Captcha.Name,
+			Description:              cfg.Commands.Captcha.Description,
+			DescriptionLocalizations: cfg.Commands.Captcha.DescriptionLocalizations,
 		},
 		discord.SlashCommandCreate{
-			Name:        "submit",
-			Description: "submit captcha solution",
+			Name:        cfg.Commands.Submit.Name,
+			Description: cfg.Commands.Submit.Description,
 			Options: []discord.ApplicationCommandOption{
 				discord.ApplicationCommandOptionString{
-					Name:                     "answer",
-					Description:              "captcha solution",
+					Name:                     cfg.Commands.Submit.Options.Answer.Name,
+					Description:              cfg.Commands.Submit.Options.Answer.Description,
 					Required:                 true,
-					DescriptionLocalizations: cfg.Localization.Commands.Submit.Options.Answer,
+					DescriptionLocalizations: cfg.Commands.Submit.Options.Answer.DescriptionLocalizations,
 				},
 			},
-			DescriptionLocalizations: cfg.Localization.Commands.Submit.Description,
+			DescriptionLocalizations: cfg.Commands.Submit.DescriptionLocalizations,
 		},
 	}
 }

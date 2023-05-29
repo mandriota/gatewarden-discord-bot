@@ -7,9 +7,24 @@ import (
 	"github.com/disgoorg/disgo/discord"
 )
 
-type command[Options any] struct {
-	Description map[discord.Locale]string
-	Options     Options
+type Command[Opts any, Responses any] struct {
+	Name                     string
+	Description              string
+	DescriptionLocalizations map[discord.Locale]string
+	Options                  Opts
+	Responses                Responses
+}
+
+type Option struct {
+	Name                     string
+	Description              string
+	DescriptionLocalizations map[discord.Locale]string
+}
+
+type Response struct {
+	TitleLocalizations       map[discord.Locale]string
+	DescriptionLocalizations map[discord.Locale]string
+	FooterLocalizations      map[discord.Locale]string
 }
 
 type Config struct {
@@ -19,25 +34,28 @@ type Config struct {
 		Password string
 		DB       int
 	}
-	Localization struct {
-		Commands struct {
-			Config command[struct {
-				Bypass    map[discord.Locale]string
-				Ephemeral map[discord.Locale]string
-			}]
-			Captcha command[struct{}]
-			Submit  command[struct {
-				Answer map[discord.Locale]string
-			}]
-		}
-		Messages struct {
-			BypassRoleRequired map[discord.Locale]string
-			SubmissionRequired map[discord.Locale]string
-			CaptchaRequired    map[discord.Locale]string
-			Reconfigured       map[discord.Locale]string
-			BypassDenied       map[discord.Locale]string
-			Bypassed           map[discord.Locale]string
-		}
+	Commands struct {
+		Config Command[
+			struct {
+				Bypass    Option
+				Ephemeral Option
+			},
+			struct{ Success Response },
+		]
+		Captcha Command[
+			struct{},
+			struct{ Success Response },
+		]
+		Submit Command[
+			struct{ Answer Option },
+			struct {
+				Success                         Response
+				ErrWrongAnswer                  Response
+				ErrUndefinedCaptcha             Response
+				ErrUndefinedBypassRole          Response
+				ErrMissingManageRolesPermission Response
+			},
+		]
 	}
 }
 
