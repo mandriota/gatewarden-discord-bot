@@ -10,7 +10,7 @@ import (
 )
 
 func (l *Listener) messageCreateBuilderBase(ctx context.Context, acic *events.ApplicationCommandInteractionCreate) *discord.MessageCreateBuilder {
-	v, _ := l.dbClient.HGet(ctx, "guildsEphemerals", acic.GuildID().String()).Bool()
+	v, _ := l.dbClient.HGet(ctx, acic.GuildID().String(), "ephemeral").Bool()
 
 	return discord.NewMessageCreateBuilder().
 		SetEphemeral(v)

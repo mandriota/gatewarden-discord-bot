@@ -7,7 +7,7 @@ require (
 	github.com/disgoorg/json v1.0.0
 	github.com/disgoorg/log v1.2.0
 	github.com/disgoorg/snowflake/v2 v2.0.1
-	github.com/mandriota/base64Captcha v0.0.0-20230522102856-7cbd3d4d7c1d
+	github.com/mandriota/gatewarden-captcha v0.0.0-20230606143502-9d1ea68f373c
 	github.com/redis/go-redis/v9 v9.0.3
 )
 
@@ -20,6 +20,6 @@ require (
 	github.com/stretchr/testify v1.8.2 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/exp v0.0.0-20220325121720-054d8573a5d8 // indirect
-	golang.org/x/image v0.6.0 // indirect
+	golang.org/x/image v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 )

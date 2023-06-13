@@ -20,25 +20,35 @@ func newCommandCreate(cfg *config.Config) []discord.ApplicationCommandCreate {
 			Name:        cfg.Commands.Config.Name,
 			Description: cfg.Commands.Config.Description,
 			Options: []discord.ApplicationCommandOption{
-				/*
-					discord.ApplicationCommandOptionString{
-						Name:        "driver",
-						Description: "set captcha driver",
-						Choices: []discord.ApplicationCommandOptionChoiceString{
-							{
-								Name:  "Alphanumerical",
-								Value: "alphanumerical",
-							},
-							{
-								Name:  "Numerical",
-								Value: "numerical",
-							},
-							{
-								Name:  "Math Expression",
-								Value: "expression",
-							},
+				discord.ApplicationCommandOptionString{
+					Name:        "driver",
+					Description: "set captcha driver",
+					Choices: []discord.ApplicationCommandOptionChoiceString{
+						{
+							Name: "Default",
 						},
-					},*/
+						{
+							Name:  "Mathematical",
+							Value: "mathematical",
+						},
+						{
+							Name:  "Alphanumerical",
+							Value: "alphanumerical",
+						},
+						{
+							Name:  "Simplified Alphanumerical",
+							Value: "simplified",
+						},
+						{
+							Name:  "Alphabetical",
+							Value: "alphabetical",
+						},
+						{
+							Name:  "Numerical",
+							Value: "numerical",
+						},
+					},
+				},
 				discord.ApplicationCommandOptionRole{
 					Name:                     cfg.Commands.Config.Options.Bypass.Name,
 					Description:              cfg.Commands.Config.Options.Bypass.Description,

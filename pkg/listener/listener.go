@@ -10,12 +10,14 @@ import (
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/log"
 	"github.com/disgoorg/snowflake/v2"
-	captcha "github.com/mandriota/base64Captcha"
 	"github.com/mandriota/gatewarden-bot/pkg/config"
+	captcha "github.com/mandriota/gatewarden-captcha"
 	"github.com/redis/go-redis/v9"
 )
 
 func New(ctx context.Context, cfg *config.Config) func(acic *events.ApplicationCommandInteractionCreate) {
+	const defaultShowLine = captcha.OptionShowHollowLine | captcha.OptionShowSineLine | captcha.OptionShowSlimeLine
+
 	l := Listener{
 		config: cfg,
 		dbClient: redis.NewClient(&redis.Options{
@@ -23,15 +25,13 @@ func New(ctx context.Context, cfg *config.Config) func(acic *events.ApplicationC
 			Password: cfg.Redis.Password,
 			DB:       cfg.Redis.DB,
 		}),
-		driver: captcha.NewDriverString(
-			200, 600, 10,
-			captcha.OptionShowHollowLine|
-				captcha.OptionShowSineLine|
-				captcha.OptionShowSlimeLine,
-			5, captcha.TxtAlphabet, nil,
-			captcha.DefaultEmbeddedFonts,
-			[]string{"Comismsh.ttf"},
-		),
+		drivers: map[string]captcha.Driver{
+			"mathematical":   captcha.NewDriverMath(200, 600, 10, defaultShowLine, nil, captcha.DefaultEmbeddedFonts, []string{"Comismsh.ttf"}),
+			"alphanumerical": captcha.NewDriverString(200, 600, 10, defaultShowLine, 5, captcha.TxtAlphabet+captcha.TxtNumbers, nil, captcha.DefaultEmbeddedFonts, []string{"Comismsh.ttf"}),
+			"simplified":     captcha.NewDriverString(200, 600, 10, defaultShowLine, 5, captcha.TxtSimpleCharaters, nil, captcha.DefaultEmbeddedFonts, []string{"Comismsh.ttf"}),
+			"alphabetical":   captcha.NewDriverString(200, 600, 10, defaultShowLine, 5, captcha.TxtAlphabet, nil, captcha.DefaultEmbeddedFonts, []string{"Comismsh.ttf"}),
+			"numerical":      captcha.NewDriverString(200, 600, 10, defaultShowLine, 5, captcha.TxtNumbers, nil, captcha.DefaultEmbeddedFonts, []string{"Comismsh.ttf"}),
+		},
 		memStore: captcha.NewMemoryStore(1000, time.Minute),
 	}
 
@@ -59,25 +59,34 @@ type Listener struct {
 	config   *config.Config
 	dbClient *redis.Client
 
-	driver   captcha.Driver
+	drivers  map[string]captcha.Driver
 	memStore captcha.Store
 }
 
 func (l *Listener) commandConfigListener(ctx context.Context, acic *events.ApplicationCommandInteractionCreate) error {
+	if enc, ok := acic.SlashCommandInteractionData().OptString("driver"); ok {
+		l.dbClient.HSet(ctx, acic.GuildID().String(), "driver", enc)
+	}
+
 	if role, ok := acic.SlashCommandInteractionData().OptRole("bypass"); ok {
-		l.dbClient.HSet(ctx, "guildsBypassRole", acic.GuildID().String(), role.ID.String())
+		l.dbClient.HSet(ctx, acic.GuildID().String(), "bypass_role", role.ID.String())
 	}
 
 	if v, ok := acic.SlashCommandInteractionData().OptBool("ephemeral"); ok {
-		l.dbClient.HSet(ctx, "guildsEphemerals", acic.GuildID().String(), v)
+		l.dbClient.HSet(ctx, acic.GuildID().String(), "ephemeral", v)
 	}
 
 	return l.reconfiguredCreateMessage(ctx, acic)
 }
 
 func (l *Listener) commandCaptchaListener(ctx context.Context, acic *events.ApplicationCommandInteractionCreate) error {
-	_, query, answer := l.driver.GenerateIdQuestionAnswer()
-	capt, err := l.driver.DrawCaptcha(query)
+	driver, ok := l.drivers[l.dbClient.HGet(ctx, acic.GuildID().String(), "driver").Val()]
+	if !ok {
+		driver = l.drivers["alphabetical"]
+	}
+
+	_, query, answer := driver.GenerateIdQuestionAnswer()
+	capt, err := driver.DrawCaptcha(query)
 	if err != nil {
 		return fmt.Errorf("error while drawing captcha: %v", err)
 	}
@@ -99,7 +108,7 @@ func (l *Listener) commandSubmitListener(ctx context.Context, acic *events.Appli
 		return l.bypassDeniedCreateMessage(ctx, acic)
 	}
 
-	id := l.dbClient.HGet(ctx, "guildsBypassRole", acic.GuildID().String()).Val()
+	id := l.dbClient.HGet(ctx, acic.GuildID().String(), "bypass_role").Val()
 	if id == "" {
 		return l.bypassRoleRequiredCreateMessage(ctx, acic)
 	}
